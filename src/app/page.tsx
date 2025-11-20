@@ -21,6 +21,8 @@ type TaxConfig = {
 };
 
 export default function Page() {
+  const API = "https://api.tkpshivatemple.com/api/tax/config";
+
   const [data, setData] = useState<TaxConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -30,19 +32,20 @@ export default function Page() {
 
     (async () => {
       try {
-        const res = await fetch(
-          "https://api.tkpshivatemple.com/api/tax/config",
-          {
-            signal: controller.signal,
-            cache: "no-store", // prevents caching in dev
-          }
-        );
+        const res = await fetch(API, {
+          signal: controller.signal,
+          cache: "no-store",
+        });
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
+        const json: TaxConfig[] = await res.json();
         setData(json);
-      } catch (e: any) {
-        if (e.name !== "AbortError") setError(e.message ?? "Failed to fetch");
+      } catch (e) {
+        if (e instanceof Error) {
+          if (e.name !== "AbortError") setError(e.message ?? "Failed to fetch");
+        } else {
+          setError("Unknown error occurred");
+        }
       } finally {
         setLoading(false);
       }
@@ -51,21 +54,42 @@ export default function Page() {
     return () => controller.abort();
   }, []);
 
-  // ✅ Define AG Grid columns
+  const saveRow = async (rowData: TaxConfig) => {
+    try {
+      const reply = await fetch(`${API}/${rowData.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          displayName: rowData.displayName,
+          keyName: rowData.keyName,
+          percentage: rowData.percentage,
+        }),
+      });
+
+      if (reply.ok) {
+        console.log("Row updated successfully!");
+      } else {
+        console.log("Failed to update row. Status:", reply.status);
+      }
+    } catch (error) {
+      console.error("Error updating row:", error);
+    }
+  };
+
   const columnDefs: ColDef<TaxConfig>[] = [
     { headerName: "ID", field: "id", width: 100, sortable: true },
     {
       headerName: "Display Name",
       field: "displayName",
       flex: 1,
-      sortable: true,
+      editable: true,
     },
-    { headerName: "Key Name", field: "keyName", flex: 1, sortable: true },
+    { headerName: "Key Name", field: "keyName", flex: 1, editable: true },
     {
       headerName: "Percentage (%)",
       field: "percentage",
       width: 160,
-      sortable: true,
+      editable: true,
     },
   ];
 
@@ -79,11 +103,12 @@ export default function Page() {
 
       <div style={{ height: 400, width: "100%" }}>
         <AgGridReact<TaxConfig>
-          theme={themeQuartz} // Modern Quartz theme (no CSS imports)
-          rowData={data} // Fetched data
-          columnDefs={columnDefs} // Columns
-          pagination={true} // Enable pagination
-          paginationPageSize={5} // Show 5 rows per page
+          theme={themeQuartz}
+          rowData={data}
+          columnDefs={columnDefs}
+          pagination={true}
+          paginationPageSize={5}
+          onCellValueChanged={(event) => saveRow(event.data)}
         />
       </div>
     </main>

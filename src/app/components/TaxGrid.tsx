@@ -21,7 +21,7 @@ const TaxGrid: React.FC<{ taxData: TaxConfig[] }> = ({ taxData }) => {
   return (
     <div style={{ height: 250, width: "100%" }}>
       <AgGridReact<TaxConfig>
-        theme={themeQuartz} // 👈 new theming API
+        theme={themeQuartz}
         rowData={taxData}
         columnDefs={columnDefs}
       />
