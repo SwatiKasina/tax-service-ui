@@ -56,15 +56,18 @@ export default function Page() {
 
   const saveRow = async (rowData: TaxConfig) => {
     try {
-      const reply = await fetch(`${API}/${rowData.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          displayName: rowData.displayName,
-          keyName: rowData.keyName,
-          percentage: rowData.percentage,
-        }),
-      });
+      const reply = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/${rowData.id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            displayName: rowData.displayName,
+            keyName: rowData.keyName,
+            percentage: rowData.percentage,
+          }),
+        }
+      );
 
       if (reply.ok) {
         console.log("Row updated successfully!");
@@ -99,15 +102,13 @@ export default function Page() {
   // ✅ Render AG Grid
   return (
     <main style={{ padding: "20px" }}>
-      <h1 style={{ marginBottom: "20px" }}>Tax Config</h1>
+      <h1 style={{ marginBottom: "20px" }}>Tax Configuration</h1>
 
       <div style={{ height: 400, width: "100%" }}>
         <AgGridReact<TaxConfig>
           theme={themeQuartz}
           rowData={data}
           columnDefs={columnDefs}
-          pagination={true}
-          paginationPageSize={5}
           onCellValueChanged={(event) => saveRow(event.data)}
         />
       </div>
